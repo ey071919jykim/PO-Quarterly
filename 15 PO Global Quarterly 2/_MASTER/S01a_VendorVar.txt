@@ -1,0 +1,69 @@
+COM *****************************************************
+COM  SCRIPT NAME:  S01a_VendorVar
+COM  SCRIPT DESC:  Formats multiple Vendor Codes entered as parameters
+COM  CREATED DATE: 3/31/2021
+COM  CREATED BY:   Marion Pacuri
+COM  CALLED BY:    S01_VariableSetting
+COM  CALLS:        S01b_VendorLoop
+COM *****************************************************
+
+CLOSE PRIMARY SECONDARY
+
+COM Create a blank table with one record
+CREATE LAYOUT T_Vendor WIDTH 1 RECORD 1
+
+COM Split the list of plant Codes into individual codes
+OPEN T_Vendor
+GROUP
+  v_Vendor_count = OCCURS(v_Vendor,',')
+  v_counter = 0
+  LOOP WHILE v_counter <= v_Vendor_count
+    EXTRACT FIELDS SPLIT(v_Vendor, ',', (v_counter + 1)) as "T_Vendor_Code" TO T_Result1
+    v_counter = v_counter + 1  
+  END
+END
+
+COM Create a computed field to clean extra spaces and characters from the Vendor Code
+OPEN T_Result1
+COUNT
+DEFINE FIELD Vendor_Code COMPUTED 
+
+LEADINGZEROS(ALL(EXCLUDE(T_Vendor_Code " ().',-&?:;/\")),10) IF MAP(ALL(EXCLUDE(T_Vendor_Code " ().',-&?:;/\")),"9")
+ALL(EXCLUDE(T_Vendor_Code " ().',-&?:;/\"))
+
+COM Delete temporary file created in the script
+DELETE T_Results_Folder_Contents.fil OK
+DELETE FORMAT T_Results_Folder_Contents OK
+
+COM Open VendorList and count the number of VendorList
+OPEN T_Result1
+SUMMARIZE ON Vendor_Code TO T_Vendor_Summ PRESORT OPEN
+COUNT
+
+COM Initialize the v_Counter and v_Count variables
+
+ASSIGN v_VendorNo    = "v_VendorSAP"
+ASSIGN %v_VendorNo%  = ""
+
+ASSIGN v_VendorNo2    = "v_VendorSAP2"
+ASSIGN %v_VendorNo2%  = ""
+
+ASSIGN v_VendorNo3    = "v_VendorSRM"
+ASSIGN %v_VendorNo3%  = ""
+
+ASSIGN v_Field       = "LIFNR"
+ASSIGN v_Field2      = "OBJECTID"
+ASSIGN v_Counter     = COUNT1
+ASSIGN v_Count       = 1
+
+COM Create a varible for the ACL Import of the vendor
+DO S01b_VendorLoop WHILE v_Count <= v_Counter IF COUNT1 > 0
+
+COM Delete temp tables
+DELETE FORMAT T_Result1 OK
+DELETE FORMAT T_Vendor OK
+DELETE FORMAT T_Vendor_Summ OK
+
+DELETE T_Result1.FIL OK
+DELETE T_Vendor.FIL OK
+DELETE T_Vendor_Summ.FIL OK

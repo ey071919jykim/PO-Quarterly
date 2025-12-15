@@ -1,0 +1,36 @@
+COM ***********************************************************
+COM  SCRIPT NAME:  S05d_Notify_PSerror
+COM  SCRIPT DESC:  Sends an email to the robot owner with the powershell 
+COM                error attached then stops all remaining scripts.
+COM  CREATED DATE: 7/15/2022
+COM  CREATED BY:   Laura Graves
+COM  CALLED BY:    S00a_Execute_Batch
+COM ***********************************************************
+
+
+COM *****************************************************
+COM  SYSTEM VARIABLES 
+COM *****************************************************
+
+SET NOTIFYRETRYATTEMPTS TO 3
+DO "%v_CRED_PATH%\S00a_O365_Email.aclscript"
+
+COM ***********************************************************
+COM  Send the email Notification
+COM ***********************************************************
+
+COM Email notification content in variables
+v_User_email = "marion_pacuri@goodyear.com"
+
+v_CC_mail_address = "ia_data_analytics@goodyear.com"
+
+v_Email_Message = "Please see attached log for the error." 
+
+COM Notify command for O365 authentication
+NOTIFY SMTP SMTPUSER "%v_SMTP_User%" PORT %v_mail_port% ENABLESSL USER "%v_ACLServer_email%" PASSWORD "%v_mail_password%" MAILBOX "%v_mail_server_name%" ADDRESS "%v_User_email%" CC "%v_CC_mail_address%" SUBJECT "%v_Email_Subject%" MESSAGE "%v_Email_Message%"  ATTACHMENT "%v_error_file%" 
+
+COM Quit excel app
+EXECUTE "TASKKILL /f /im Excel.exe"
+
+COM Stops execution of any current and remaining scripts
+ESCAPE ALL 

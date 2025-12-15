@@ -1,0 +1,83 @@
+COM *****************************************************
+COM  SCRIPT NAME:  S01a_CoCdVar
+COM  SCRIPT DESC:  Formats multiple Vendor Codes entered as parameters
+COM  CREATED DATE: 3/31/2021
+COM  CREATED BY:   Marion Pacuri
+COM  CALLED BY:    S01_VariableSetting
+COM  CALLS:        S01b_CoCdLoop
+COM *****************************************************
+
+CLOSE PRIMARY SECONDARY
+
+COM Create a blank table with one record
+CREATE LAYOUT T_CoCd WIDTH 1 RECORD 1
+
+COM Split the list of plant Codes into individual codes
+OPEN T_CoCd
+GROUP
+  v_CoCd_count = OCCURS(v_CoCd,',')
+  v_counter = 0
+  LOOP WHILE v_counter <= v_CoCd_count
+    EXTRACT FIELDS SPLIT(v_CoCd, ',', (v_counter + 1)) as "T_CoCd_Code" TO T_Result1
+    v_counter = v_counter + 1  
+  END
+END
+
+COM Create a computed field to clean extra spaces and characters from the CoCd Code
+OPEN T_Result1
+COUNT
+DEFINE FIELD CoCd_Code COMPUTED UPPER(ALLTRIM(EXCLUDE(T_CoCd_Code " ().',-&?:;/\")))
+
+COM Delete temporary file created in the script
+DELETE T_Results_Folder_Contents.fil OK
+DELETE FORMAT T_Results_Folder_Contents OK
+
+COM Open CoCdList and count the number of CoCdList
+OPEN T_Result1
+SUMMARIZE ON CoCd_Code TO T_CoCd_Summ PRESORT OPEN
+COUNT
+
+COM Initialize the v_Counter and v_Count variables
+
+ASSIGN v_CoCdNo    = "v_CoCdSAP"
+ASSIGN %v_CoCdNo%  = ""
+
+ASSIGN v_Field     = "BUKRS"
+ASSIGN v_CoCdNo    = "v_CoCdSAP"
+ASSIGN %v_CoCdNo%  = ""
+
+ASSIGN v_CoCdNo2    = "v_CoCdSRM"
+ASSIGN %v_CoCdNo2%  = ""
+
+ASSIGN v_CoCdNo3    = "v_CoCdFolder"
+ASSIGN %v_CoCdNo3%  = ""
+
+ASSIGN v_CoCdNo4    = "v_CoCdLFM1"
+ASSIGN %v_CoCdNo4%  = ""
+
+ASSIGN v_CoCdNo5    = "v_CoCdPROJ"
+ASSIGN %v_CoCdNo5%  = ""
+
+ASSIGN v_CoCdNo6    = "v_CoCdCDPOS"
+ASSIGN %v_CoCdNo6%  = ""
+
+ASSIGN v_CoCdNo7    = "v_CoCdSRM_PO"
+ASSIGN %v_CoCdNo7%  = ""
+
+ASSIGN v_CoCdNo8    = "v_CoCdSRM_SC"
+ASSIGN %v_CoCdNo8%  = ""
+
+ASSIGN v_Counter     = COUNT1
+ASSIGN v_Count       = 1
+
+COM Create a varible for the ACL Import of the CoCd
+DO S01b_CoCdLoop WHILE v_Count <= v_Counter IF COUNT1 > 0
+
+COM Delete temp tables
+DELETE FORMAT T_Result1 OK
+DELETE FORMAT T_CoCd OK
+DELETE FORMAT T_CoCd_Summ OK
+
+DELETE T_Result1.FIL OK
+DELETE T_CoCd.FIL OK
+DELETE T_CoCd_Summ.FIL OK

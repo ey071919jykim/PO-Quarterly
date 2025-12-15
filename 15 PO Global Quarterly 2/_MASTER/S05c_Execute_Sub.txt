@@ -1,0 +1,39 @@
+SET ECHO NONE
+COM ***********************************************************
+COM  SCRIPT NAME:  S05c_Execute_Sub
+COM  SCRIPT DESC:  Refreshes the directory table, checks if all
+COM                files are formatted
+COM                whether the format macro has finished.
+COM  CREATED DATE: 7/25/23
+COM  CREATED BY:   Marion Pacuri
+COM  FILE IN:      Output_Folder_Contents_xlsb.FIL  
+COM  FILE OUT:     Output_Folder_Join.FIL 
+COM  CALLED BY:    S05a_Execute_PS
+COM ***********************************************************
+
+COM *** Clears files created in the script 
+CLOSE PRIM SECON
+DELETE T_Output_Folder_Contents_xlsb.fil OK
+DELETE Output_Folder_Join.FIL OK
+DELETE FORMAT Output_Folder_Join OK 
+DELETE FORMAT T_Output_Folder_Contents_xlsb OK
+
+COM *** Creates a table of the delimited files in the Output folder then counts the number of files
+DIRECTORY "%v_powershell_exec_path%\*.xlsb" TO "T_Output_Folder_Contents_xlsb.fil" SUPPRESS
+
+COM Company Codes in file names indicate that the file is already finished fomratting
+OPEN T_Output_Folder_Contents_xlsb
+EXTRACT ALL FIELDS TO T_Unformatted IF NOT FINDMULTI(FILE_NAME,"Consolidated") OPEN
+COUNT
+
+v_Unformatted = COUNT1
+
+COM *** Extract the last directory refresh to overwrite the primary file for subsequent joins
+OPEN T_Output_Folder_Contents_xlsb
+EXTRACT FIELDS ALL TO Output_Folder_Contents_xlsb
+
+EXECUTE 'TIMEOUT /t 5 /nobreak'
+
+SET ECHO ON
+DISPLAY TIME()
+DISPLAY v_Unformatted

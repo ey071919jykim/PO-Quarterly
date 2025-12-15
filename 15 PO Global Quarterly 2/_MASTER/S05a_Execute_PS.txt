@@ -1,0 +1,63 @@
+COM ***********************************************************
+COM  SCRIPT NAME:  S05a_Execute_PS
+COM  SCRIPT DESC:  Execute formatting Powershell Script
+COM  CREATED DATE: 7/25/2023
+COM  CALLED BY:    Export Scripts
+COM  CALLS:        S05b_Execute_Sub
+COM                S05c_Execute_Sub
+COM                S05d_Notify_PSerror
+COM  CREATED BY:   Marion Pacuri
+COM ***********************************************************
+
+CLOSE PRIM SECON
+
+COM Move formatting template to output folder
+EXECUTE 'cmd /c COPY /Y "%v_MACRO_PATH%\%v_PS_script%" "%v_powershell_exec_path%\%v_PS_script%"'
+
+DISP TIME()
+
+COM Execute powershell script
+EXECUTE 'powershell.exe -NoProfile -NoLogo -NonInteractive -ExecutionPolicy Bypass -File "%v_powershell_exec_path%\%v_PS_script%"' ASYNC
+
+COM **********************************************************************
+COM *** Assign counter and check the directory until all delimited files 
+COM *** have been converted and formatted to Excel before moving to the next step
+COM **********************************************************************
+
+COM *** Creates a table of the delimited files in the Output folder then counts the number of files
+DIRECTORY "%v_powershell_exec_path%\*.del" TO "Output_Folder_Contents_del.fil" SUPPRESS
+OPEN Output_Folder_Contents_del
+COUNT
+
+ASSIGN v_Counter = 1
+DO S05b_Execute_Sub WHILE v_Counter <= COUNT1
+
+DISP TIME()
+
+COM **********************************************************************
+
+COM *** Creates a table of the delimited files in the Output folder then counts the number of files
+DIRECTORY "%v_powershell_exec_path%\*.xlsb" TO "Output_Folder_Contents_xlsb.fil" SUPPRESS
+
+ASSIGN v_Unformatted = 1
+DO S05c_Execute_Sub WHILE v_Unformatted <> 0
+
+DISP TIME()
+
+COM **********************************************************************
+
+COM Check if there is error in powershell
+DIRECTORY "%v_powershell_exec_path%\error_log.txt" TO "Error_File.FIL" SUPPRESS
+OPEN Error_File
+COUNT
+ASSIGN v_Count_Error = COUNT1
+
+v_error_file = "%v_powershell_exec_path%\error_log.txt"
+v_Email_Subject = "POWERSHELL ERROR: Pricing SS was formatted with an Error"
+
+COM Sends an email if an error file is present and stops the ACL project from moving forward
+DO S05d_Notify_PSerror IF v_Count_Error > 0
+
+COM Clean up output folder
+SET LOG
+EXECUTE 'cmd /c del "%v_powershell_exec_path%\*.ps1"'

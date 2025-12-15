@@ -1,0 +1,29 @@
+COM ***********************************************************
+COM  SCRIPT NAME:  S02_Import_ALL
+COM  SCRIPT DESC:  This script will run scripts for all import scripts
+COM  CREATED DATE: 11/8/2021
+COM  CREATED BY:   Marion Pacuri
+COM ***********************************************************
+
+COM Assign v_COMMENT variable. Import only if test was selected.
+v_COMMENT = ""
+IF (v_bootJ <> 0) AND (v_bootA + v_bootB + v_bootC + v_bootD + v_bootE + v_bootF + v_bootG + v_bootH + v_bootI = 0) v_COMMENT = "COMMENT"
+
+%v_COMMENT%
+DO S02a_Import_Transactions_SRM
+DO S02a_Import_Transactions
+DO S02b_Import_MasterData
+DO S02c_Import_Text1
+DO S02d_Import_Text2
+
+COM***********************************************************
+COM TEST J_EDW_PO_SC_Raw does not import any SAP tables. 
+COM Only run S02e_Import_SRM_Raw script for this test.
+COM***********************************************************
+
+COM Assign v_COMMENT variable. Import only if test was selected.
+v_COMMENT = "COMMENT"
+IF v_bootJ <> 0 v_COMMENT = ""
+
+%v_COMMENT%
+DO S02e_Import_SRM_Raw

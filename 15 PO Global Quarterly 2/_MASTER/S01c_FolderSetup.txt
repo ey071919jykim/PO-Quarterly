@@ -1,0 +1,16 @@
+COM ***********************************************************
+COM  SCRIPT NAME:  S01c_FolderSetup
+COM  SCRIPT DESC:  Set folder structure for the project. 
+COM                ** Only runs the first time the robot is kicked off.
+COM  CREATED DATE: 10/25/2021
+COM  CREATED BY:   Laura Graves
+COM  CALLED BY:    S01_VariableSetting
+COM ***********************************************************
+
+COM Clear the folder if rerunning the robot and the folder is already created
+EXECUTE 'cmd /c RMDIR /Q/S "%v_EXPORT_PATH%"'
+
+EXECUTE 'TIMEOUT /t 2 /nobreak'
+
+COM Create folder to export Excel files
+EXECUTE 'cmd /c MD "%v_EXPORT_PATH%"'

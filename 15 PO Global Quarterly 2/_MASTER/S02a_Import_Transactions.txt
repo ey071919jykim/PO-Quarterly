@@ -1,0 +1,39 @@
+COM ***********************************************************
+COM  SCRIPT NAME:  S02a_Import_Transactions
+COM  SCRIPT DESC:  Import PO transaction tables from SAP via ACL Direct Link
+COM  CREATED DATE: 11/8/2021
+COM  CREATED BY:   Marion Pacuri
+COM  CALLED BY:    S02_Import_ALL
+COM  CALLS:        S03_SAP_Retrieve
+COM  FILES OUT:    S_EKKO_EKPO.FIL
+COM                S_EKKO_EKPO_EBAN.FIL
+COM                S_EKKO_EKPO_EKKN.FIL
+COM                S_RBKP_RSEG_EKKO.FIL
+COM                S_EKBE.FIL
+COM                S_EKKO_EKPO_OPEN.FIL
+COM                S_EKKO_EKPO_EKKN_OPEN.FIL
+COM                S_EKET.FIL
+COM                S_BKPF_BSEG.FIL
+COM                S_BKPF_BSEG_M.FIL
+COM                S_RBKP_RSEG.FIL
+COM                S_AP_OpenItems.FIL
+COM                S_AP_ClearedItems.FIL
+COM                S_COVP.FIL
+COM                S_COOI.FIL
+COM                S_JCDS.FIL
+COM                S_BPGE.FIL
+COM                S_CDHDR_CDPOS_VMD.FIL
+COM                S_CDHDR_CDPOS_PMT_BLOCK.FIL
+COM ***********************************************************
+
+COM Set folder
+SET FOLDER /Tables/Source
+SET DELETE_FILE ON
+
+COM IMPORT EKKO_EKPO (Purchasing Docs)
+IMPORT SAP PASSWORD 1 TO S_EKKO_EKPO SAP SOURCE "SAP AGENT" <q version="%v_version%"><s>0</s><d>%v_SAP_source% </d><u>%v_userID%</u><c>%v_SAP_client%</c><lg>EN</lg><cf>S_EKKO_EKPO.fil</cf><sf>%v_SAP_sf%</sf><jcount>09231500</jcount><jname>DL_%v_userID%092314.DAT</jname><dl>278 </dl><m>1</m><r>500</r><ar>1</ar><e>500</e><ts><t><n>EKKO</n><a>T00002</a><td>Purchasing Document Header</td><fs><f>EBELN</f><f>BUKRS</f><f>BSTYP</f><f>BSART</f><f>STATU</f><f>AEDAT</f><f>ERNAM</f><f>PINCR</f><f>LIFNR</f><f>ZTERM</f><f>EKORG</f><f>EKGRP</f><f>WAERS</f><f>WKURS</f><f>BEDAT</f><f>VERKF</f><f>UNSEZ</f><f>FRGGR</f><f>FRGSX</f><f>FRGKE</f><f>FRGZU</f><f>RLWRT</f><f>KDATB</f><f>KDATE</f></fs><wc><w><f>AEDAT</f><o>6</o><l>%v_dateLowFormat%</l><h>%v_dateHighFormat%</h></w>%v_CoCdSAP%<w><f>BSTYP</f><o>0</o><l>F</l><h></h></w>%v_VendorFilter%</wc></t><t><n>EKPO</n><a>T00003</a><td>Purchasing Document Item</td><tt>1</tt><fs><f>EBELN</f><f>EBELP</f><f>PSTYP</f><f>LOEKZ</f><f>AEDAT</f><f>TXZ01</f><f>MATNR</f><f>KUNNR</f><f>WERKS</f><f>LGORT</f><f>MATKL</f><f>MENGE</f><f>MEINS</f><f>BPRME</f><f>BPUMZ</f><f>BPUMN</f><f>NETPR</f><f>PEINH</f><f>NETWR</f><f>BRTWR</f><f>BWTAR</f><f>BWTTY</f><f>ELIKZ</f><f>EREKZ</f><f>KNTTP</f><f>TWRKZ</f><f>WEPOS</f><f>REPOS</f><f>BANFN</f><f>BNFPO</f><f>RETPO</f><f>BSGRU</f><f>NOVET</f><f>AFNAM</f><f>STATUS</f><f>EFFWR</f></fs><wc>%v_PlantFilter%</wc></t></ts><js><jc><pt><pa>T00002</pa><pf>EBELN</pf></pt><ct><ca>T00003</ca><cf>EBELN</cf></ct></jc></js></q>
+
+COM Run SAP Background Check to retrieve tables
+DO S03_SAP_Retrieve
+
+CLOSE PRIMARY SECONDARY

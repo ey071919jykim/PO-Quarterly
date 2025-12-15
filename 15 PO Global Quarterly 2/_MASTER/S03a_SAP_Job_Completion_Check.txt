@@ -1,0 +1,94 @@
+COM ****************************************************************************
+COM  SCRIPT NAME:  S03a_SAP_Job_Completion_Check
+COM  SCRIPT DESC:  Repeatedly checks the status of SAP background jobs up to N times, 
+COM                at user specified intervals. If all background jobs are completed, 
+COM                retrieves all tables. If after N attempts some background jobs are 
+COM                not completed, the script aborts. 
+COM  CREATED DATE: 1/27/2021
+COM  CREATED BY:   Marion Pacuri
+COM  CALLED BY:    S03_SAP_Retrieve
+COM  CALLS:        S03b_SAP_Job_Completion_Check_A01
+COM ****************************************************************************
+
+COMMENT *** Create a single record stub table.
+CREATE LAYOUT T_Stub WIDTH 1 RECORD 1
+
+COMMENT *** Create the Direct Link filters for importing table TBTCO. 
+COMMENT *** Assumption: The background jobs are initiated on the same day as this script. If not, adjust v_start_TBTCO to N days before the run date. E.g deduct 1 day if the imports ran before midnight and this script runs after midnight. 
+v_start_TBTCO    = ALLTRIM(DATE(TODAY() -1))
+v_end_TBTCO      = ALLTRIM(DATE()) IF v_Region = "LA" OR (v_Region = "NA" AND v_CoCd <> "N101") OR v_Region = "CHEM" 
+v_end_TBTCO      = ALLTRIM(DATE(TODAY() +1)) IF v_Region = "AP" OR v_Region = "EMEA"
+v_end_TBTCO      = ALLTRIM(DATE(TODAY() +3)) IF v_Region = "NA" AND v_CoCd = "N101"
+
+v_date_filter    = '<w><f>STRTDATE</f><o>6</o><l>%v_start_TBTCO%</l><h>%v_end_TBTCO%</h></w>'
+
+COMMENT
+********************************************************************************
+Obtain a list of unretrieved SAP tables. 
+********************************************************************************
+END
+
+
+COMMENT *** Create a list of all project tables. 
+SAVE TABLELIST TABLE TO T_Table_List
+OPEN T_Table_List
+
+DEFINE FIELD c_Sourcetype COMPUTED PROPERTIES(ALLTRIM(table_name) "table" "sourcetype")
+
+DEFINE FIELD c_Sourcename COMPUTED PROPERTIES(ALLTRIM(table_name) "table" "sourcename")
+
+DEFINE FIELD c_Filemodifiedat COMPUTED PROPERTIES(ALLTRIM(table_name) "table" "filemodifiedat")
+
+DEFINE FIELD c_Filesize COMPUTED PROPERTIES(ALLTRIM(table_name) "table" "filesize")
+
+DEFINE FIELD c_Reverse_Order COMPUTED RECNO()
+
+COMMENT *** Extract SAP jobs with no file size (unretrieved background jobs)
+OPEN T_Table_List
+EXTRACT FIELDS ALL TO T_Retrieve IF c_Sourcetype = "SAP" AND ISBLANK(c_Filesize)
+
+COMMENT *** Sort the data so that the latest table appears first. 
+OPEN T_Retrieve
+SORT ON c_Reverse_Order D TO T_Retrieve_Sorted
+
+COMMENT *** Create RETRIEVE syntax for the eligible tables and count the number of eligible records. 
+OPEN T_Retrieve_Sorted
+DEFINE FIELD Retrieve_Syntax COMPUTED 'RETRIEVE ' + ALLTRIM(Table_Name) + ' PASSWORD 1'
+
+ASSIGN v_table_count = %WRITE1%
+
+COMMENT
+********************************************************************************
+Call the subscript to check the job status
+********************************************************************************
+END
+
+COMMENT *** Call the subscript A01 N times, equal to the number of maximum iterations (unless exited early than v_max_iterations because all background jobs are complete). 
+ASSIGN v_iterations = 1
+IF v_table_count > 0 DO SCRIPT S03b_SAP_Job_Completion_Check_A01 WHILE v_iterations <= v_max_iterations
+IF v_table_count = 0 "Error: No tables to be retrieved"
+ 
+
+COMMENT
+********************************************************************************
+Retrieve those tables that finished downloading after maximum iteration count has been reached
+********************************************************************************
+END
+
+COMMENT *** Extract relevant fields to a job status table for troubleshooting purposes. T_Sorted_Jobs2 gets overwritten for every iteration of the prior script. Below is the latest avaialble version. 
+COMMENT *** The final table will have the status as it exists upon the final iteration. 
+OPEN T_Sorted_Jobs2
+v_fieldlist = "RecNo TBTCO_JOBNAME STATUS_LONG TBTCO_STATUS TBTCO_STRTDATE TBTCO_STRTTIME TBTCO_ENDDATE TBTCO_ENDTIME TBTCO_JOBCOUNT"
+EXTRACT FIELDS %v_fieldlist% TO R_Job_Status 
+
+COMMENT *** Create a Retrieve Script for the finished jobs. 
+OPEN T_Retrieve_Sorted
+EXPORT FIELDS Retrieve_Syntax TO T_Script.aclscript IF ALL(table_name)<>"T_Job_Status"
+DELETE SCRIPT T_Script OK 
+DO SCRIPT T_Script.aclscript
+DELETE SCRIPT T_Script OK
+DELETE FORMAT T_Table_List OK
+
+OPEN R_Job_Status
+
+COMMENT *** End of script

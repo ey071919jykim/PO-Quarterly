@@ -1,0 +1,41 @@
+COM ***********************************************************
+COM  SCRIPT NAME:  S02b_Import_MasterData
+COM  SCRIPT DESC:  Import Master Data tables from SAP via ACL Direct Link
+COM  CREATED DATE: 11/8/2021
+COM  CREATED BY:   Marion Pacuri
+COM  CALLED BY:    S02_Import_ALL
+COM  CALLS:        S03_SAP_Retrieve
+COM  FILES OUT:    S_LFA1.FIL
+COM                S_LFA1_LFB1.FIL
+COM                S_LFA1_LFM1.FIL
+COM                S_PROJ_PRPS.FIL
+COM                S_AUFK.FIL
+COM                S_SKAT.FIL
+COM                S_VMD_CoCd_ALL.FIL
+COM                S_VMD_Email.FIL
+COM                S_VMD_VenGrpTxt.FIL
+COM                S_BNKA.FIL
+COM ***********************************************************
+
+COM Set folder
+SET FOLDER /Tables/Source
+
+COM Assign v_COMMENT variable. Import only if test was selected.
+v_COMMENT = "COMMENT"
+IF v_Region = "AP" v_COMMENT = ""
+
+%v_COMMENT%
+COM IMPORT LFA1_LFB1: Vendor Master Data - Company Code Level
+IMPORT SAP PASSWORD 1 TO S_LFA1_LFB1 SAP SOURCE "SAP AGENT" <q version="%v_version%"><s>0</s><d>%v_SAP_source%</d><u>%v_userID%</u><c>%v_SAP_client%</c><lg>EN</lg><cf>S_LFA1_LFB1.fil</cf><sf>%v_SAP_sf%</sf><jcount>08213900</jcount><jname>DL_%v_userID%082137.DAT</jname><dl>229 </dl><m>1</m><sn></sn><sg></sg><ws>0</ws><jw>0</jw><r>500</r><ar>1</ar><e>500</e><ts><t><n>LFA1</n><a>T00001</a><td>Vendor Master (General Section)</td><tt>1</tt><fs><f>LIFNR</f><f>LAND1</f><f>NAME1</f><f>NAME2</f><f>NAME3</f><f>NAME4</f><f>ORT01</f><f>ORT02</f><f>BRSCH</f><f>BEGRU</f><f>ERDAT</f><f>ERNAM</f><f>KONZS</f><f>KTOKK</f><f>KTOCK</f><f>XCPDK</f><f>VBUND</f><f>KRAUS</f><f>WERKS</f><f>SPERZ</f><f>CONFS</f><f>UPDAT</f><f>UPTIM</f><f>LOEVM</f><f>SPERR</f><f>SPERM</f></fs><wc></wc></t><t><n>LFB1</n><a>T00002</a><td>Vendor Master (Company Code)</td><tt>1</tt><fs><f>BUKRS</f><f>ERDAT</f><f>ERNAM</f><f>LOEVM</f><f>SPERR</f><f>ZAHLS</f><f>ZTERM</f><f>ZWCCAT</f></fs><wc></wc></t></ts><js><jc><pt><pa>T00001</pa><pf>LIFNR</pf></pt><ct><ca>T00002</ca><cf>LIFNR</cf></ct></jc></js></q>
+
+v_COMMENT = "COMMENT"
+IF v_Region <> "AP" v_COMMENT = ""
+
+%v_COMMENT%
+COM IMPORT LFA1_LFB1: Vendor Master Data - Company Code Level
+IMPORT SAP PASSWORD 1 TO S_LFA1_LFB1 SAP SOURCE "SAP AGENT" <q version="%v_version%"><s>0</s><d>%v_SAP_source%</d><u>%v_userID%</u><c>%v_SAP_client%</c><lg>EN</lg><cf>S_LFA1_LFB1.fil</cf><sf>%v_SAP_sf%</sf><jcount>08213900</jcount><jname>DL_%v_userID%082137.DAT</jname><dl>229 </dl><m>1</m><sn></sn><sg></sg><ws>0</ws><jw>0</jw><r>500</r><ar>1</ar><e>500</e><ts><t><n>LFA1</n><a>T00001</a><td>Vendor Master (General Section)</td><tt>1</tt><fs><f>LIFNR</f><f>LAND1</f><f>NAME1</f><f>NAME2</f><f>NAME3</f><f>NAME4</f><f>ORT01</f><f>ORT02</f><f>BRSCH</f><f>BEGRU</f><f>ERDAT</f><f>ERNAM</f><f>KONZS</f><f>KTOKK</f><f>KTOCK</f><f>XCPDK</f><f>VBUND</f><f>KRAUS</f><f>WERKS</f><f>SPERZ</f><f>CONFS</f><f>UPDAT</f><f>UPTIM</f><f>LOEVM</f><f>SPERR</f><f>SPERM</f></fs><wc></wc></t><t><n>LFB1</n><a>T00002</a><td>Vendor Master (Company Code)</td><tt>1</tt><fs><f>BUKRS</f><f>ERDAT</f><f>ERNAM</f><f>LOEVM</f><f>SPERR</f><f>ZAHLS</f><f>ZTERM</f></fs><wc></wc></t></ts><js><jc><pt><pa>T00001</pa><pf>LIFNR</pf></pt><ct><ca>T00002</ca><cf>LIFNR</cf></ct></jc></js></q>
+
+COM Run SAP Background Check to retrieve tables
+DO S03_SAP_Retrieve
+
+CLOSE PRIMARY SECONDARY

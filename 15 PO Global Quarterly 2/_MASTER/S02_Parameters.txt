@@ -1,0 +1,29 @@
+COM ***********************************************************
+COM  SCRIPT NAME:  S02_Parameters
+COM  SCRIPT DESC:  Export user input parameters for Excel template 
+COM                macros.
+COM  CREATED DATE: 4/9/2021
+COM  CREATED BY:   Marion Pacuri
+COM  FILES OUT:    R_PARAMETERS.FIL 
+COM                DA02_Parameters.xlsx
+COM  CALLED BY:    S01_VariableSetting
+COM ***********************************************************
+
+SET FOLDER /Tables/Source
+
+COM DELETE EXISTING FILES
+CLOSE PRIM SEC 
+DELETE R_PARAMETERS.FIL OK
+DELETE FORMAT R_PARAMETERS OK 
+
+COM Create a blank table with one record
+CREATE LAYOUT R_PARAMETERS WIDTH 1 RECORD 1
+
+COM Define fields for the user input parameters
+OPEN R_PARAMETERS
+
+DEFINE FIELD p_dateLow COMPUTED v_dateLow
+
+DEFINE FIELD p_dateHigh COMPUTED v_dateHigh
+
+CLOSE PRIM SEC 

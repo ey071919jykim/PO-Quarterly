@@ -1,0 +1,28 @@
+COM ***********************************************************
+COM  SCRIPT NAME:  S04_Notify
+COM  SCRIPT DESC:  Emails the user a link to the folder containing 
+COM                analysis Excel files to be picked up.
+COM  CREATED DATE: 3/24/2021
+COM  CREATED BY:   Marion Pacuri
+COM  CALLED BY:    *00_Master
+COM ***********************************************************
+
+COM *****************************************************
+COM  SYSTEM VARIABLES 
+COM *****************************************************
+
+SET NOTIFYRETRYATTEMPTS TO 3
+DO "%v_CRED_PATH%\S00a_O365_Email.aclscript"
+
+COM Email notification content in variables
+v_CC_mail_address = "ia_data_analytics@goodyear.com"
+
+v_server_path = "\\akraclrobot01.na.ad.goodyear.com%v_EXPORT_PATH%"
+v_survey_from = "https://forms.office.com/Pages/ResponsePage.aspx?id=Zomek4WSmkqfBAiH7-iq4KBp1HZCOMFNuHmVN5MBguJUM083SUcyTFpDTjEzVDVaNFpKR1UxMjlTQSQlQCN0PWcu"
+
+v_Email_Subject = "Purchase Order Self-Service Results are Ready for Pick-up"
+
+v_Email_Message = "The Purchase Order self-service analysis has completed. Please follow the link to the Internal Audit ACL server to pick up the data analysis reports at %v_server_path%. Please save these reports to a folder on your PC." + CHR(10) + CHR(10) + "Thank you for using our self-service analytics. Now, we would like to hear from you! Please share your feedback regarding the value you are receiving from the data analytics provided to you. Your feedback will help us as we work to continue to improve our bots. Click on the survey link below:" + CHR(10) + CHR(10) + "%v_survey_from%" + CHR(10) + CHR(10) + "Thank you," + CHR(10) +"Internal Audit Data Analytics Team" 
+
+COM Notify command for O365 authentication
+NOTIFY SMTP SMTPUSER "%v_SMTP_User%" PORT %v_mail_port% ENABLESSL USER "%v_ACLServer_email%" PASSWORD "%v_mail_password%" MAILBOX "%v_mail_server_name%" ADDRESS "%v_User_email%" CC "%v_CC_mail_address%" SUBJECT "%v_Email_Subject%" MESSAGE "%v_Email_Message%"

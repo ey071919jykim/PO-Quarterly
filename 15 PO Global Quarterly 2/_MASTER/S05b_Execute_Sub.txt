@@ -1,0 +1,26 @@
+SET ECHO NONE
+COM ***********************************************************
+COM  SCRIPT NAME:  S05b_Execute_Sub
+COM  SCRIPT DESC:  Creates a table from the directory and counts 
+COM                the number of delimited files.
+COM  CREATED DATE: 8/26/2021
+COM  CREATED BY:   JM Javelosa
+COM  FILE OUT:     Output_Folder_Contents_del.fil
+COM  CALLED BY:    S05a_Execute_PS
+COM ***********************************************************
+
+COM Refresh the contents of the Output folder 
+CLOSE PRIM SEC 
+DELETE Output_Folder_Contents_del.fil OK
+DELETE FORMAT Output_Folder_Contents_del OK
+
+DIRECTORY "%v_powershell_exec_path%\*.del" TO "Output_Folder_Contents_del.fil" SUPPRESS
+
+COM Counts the number of delimited files remaining
+OPEN Output_Folder_Contents_del
+COUNT 
+
+EXECUTE 'TIMEOUT /t 5 /nobreak'
+
+SET ECHO ON
+DISPLAY TIME()

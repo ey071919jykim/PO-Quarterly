@@ -1,0 +1,45 @@
+COM *****************************************************
+COM  SCRIPT NAME:  S01b_CoCdLoop
+COM  SCRIPT DESC:  Performs loop to create vendor variable
+COM  CREATED DATE: 3/31/2021
+COM  CREATED BY:   Marion Pacuri
+COM  CALLED BY:    S01a_CoCdVar
+COM *****************************************************
+
+CLOSE PRIMARY SECONDARY
+
+COM Get Nth Record 
+OPEN T_CoCd_Summ
+LOCATE RECORD v_Count
+
+COM Create variables for SAP tables import
+ASSIGN v_BUKRS = ALL(CoCd_Code)
+ASSIGN %v_CoCdNo% = %v_CoCdNo% + "<w><f>BUKRS</f><o>0</o><l>" + "%v_BUKRS%" + "</l><h></h></w>"
+
+COM Create varialbe for SRM Import
+ASSIGN %v_CoCdNo2% = %v_CoCdNo2% + "CO_CD = '" + "%v_BUKRS%" + "' OR " IF v_Count < v_Counter
+ASSIGN %v_CoCdNo2% = %v_CoCdNo2% + "CO_CD = '" + "%v_BUKRS%" + "'"     IF v_Count = v_Counter
+
+COM Create variable for folder naming convention
+ASSIGN %v_CoCdNo3% = %v_CoCdNo3% + "%v_BUKRS%_" IF v_Count < v_Counter
+ASSIGN %v_CoCdNo3% = %v_CoCdNo3% + "%v_BUKRS%"  IF v_Count = v_Counter
+
+COM Create variables for LFM1 SAP import
+ASSIGN %v_CoCdNo4% = %v_CoCdNo4% + "<w><f>EKORG</f><o>0</o><l>" + "%v_BUKRS%" + "</l><h></h></w>"
+
+COM Create variables for PROJ SAP import
+ASSIGN %v_CoCdNo5% = %v_CoCdNo5% + "<w><f>VBUKR</f><o>0</o><l>" + "%v_BUKRS%" + "</l><h></h></w>"
+
+COM Create variables for S_CDHDR_CDPOS_PMT_BLOCK SAP import
+ASSIGN %v_CoCdNo6% = %v_CoCdNo6% + "<w><f>TABKEY</f><o>7</o><l>" + "*%v_BUKRS%*" + "</l><h></h></w>"
+
+COM Create varialbe for SRM Import
+ASSIGN %v_CoCdNo7% = %v_CoCdNo7% + "PO.CO_CD = '" + "%v_BUKRS%" + "' OR " IF v_Count < v_Counter
+ASSIGN %v_CoCdNo7% = %v_CoCdNo7% + "PO.CO_CD = '" + "%v_BUKRS%" + "'"     IF v_Count = v_Counter
+
+COM Create varialbe for SRM Import
+ASSIGN %v_CoCdNo8% = %v_CoCdNo8% + "SC.CO_CD = '" + "%v_BUKRS%" + "' OR " IF v_Count < v_Counter
+ASSIGN %v_CoCdNo8% = %v_CoCdNo8% + "SC.CO_CD = '" + "%v_BUKRS%" + "'"     IF v_Count = v_Counter
+
+COM Increment v_Count by 1 for the next loop
+ASSIGN v_Count = v_Count + 1

@@ -1,0 +1,68 @@
+COM ***********************************************************
+COM  SCRIPT NAME:  S00a_Boot_Scripts
+COM  SCRIPT DESC:  Creates a table from the directory and counts 
+COM                the number of analytics selected by the user.
+COM  CREATED DATE: 10/21/2021
+COM  CREATED BY:   Laura Graves
+COM  FILES IN:     _boot_*.aclscript 
+COM                *_PARAMETERS.FIL 
+COM  FILES OUT:    Robot_Boot_Scripts.fil
+COM                Parameter_fils.fil 
+COM  CALLED BY:    S00_Master_ALL
+COM ***********************************************************
+
+CLOSE PRIM SEC 
+DELETE Robot_Boot_Scripts.FIL OK 
+DELETE FORMAT Robot_Boot_Scripts OK 
+
+COM Creates a table of boot scripts in the robot folder 
+DIRECTORY "_boot_*.aclscript" TO "Robot_Boot_Scripts" SUPPRESS
+
+COM Counts the number of acl boot scripts selected
+OPEN Robot_Boot_Scripts
+COUNT 
+
+v_bootnum = COUNT1
+
+COM Creates variables to determine if a particular analytic test was selected (1) or not (0)
+GROUP
+  COUNT IF FIND("_boot_A_" FILE_NAME)
+  COUNT IF FIND("_boot_B_" FILE_NAME)
+  COUNT IF FIND("_boot_C_" FILE_NAME)
+  COUNT IF FIND("_boot_D_" FILE_NAME)
+  COUNT IF FIND("_boot_E_" FILE_NAME)
+  COUNT IF FIND("_boot_F_" FILE_NAME)
+  COUNT IF FIND("_boot_G_" FILE_NAME)
+  COUNT IF FIND("_boot_H_" FILE_NAME)
+  COUNT IF FIND("_boot_I_" FILE_NAME)
+  COUNT IF FIND("_boot_J_" FILE_NAME)
+  COUNT IF FIND("_boot_K_" FILE_NAME)
+  COUNT IF FIND("_boot_X_" FILE_NAME)
+END
+
+v_bootA = COUNT2
+v_bootB = COUNT3
+v_bootC = COUNT4
+v_bootD = COUNT5
+v_bootE = COUNT6
+v_bootF = COUNT7
+v_bootG = COUNT8
+v_bootH = COUNT9
+v_bootI = COUNT10
+v_bootJ = COUNT11
+v_bootK = COUNT12
+v_bootX = COUNT13
+
+COM v_bootK same with v_bootA
+IF (v_bootA = 0 AND v_bootK <> 0) v_bootA = v_bootK
+
+COM Creates a table of boot scripts in the robot folder 
+DIRECTORY "*_PARAMETERS.FIL" TO "Parameter_fils" SUPPRESS
+
+COM Counts the number of acl boot scripts selected
+OPEN Parameter_fils
+COUNT 
+
+v_paramnum = COUNT1
+
+DISP VAR 

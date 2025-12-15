@@ -1,0 +1,135 @@
+COM ***********************************************************
+COM  SCRIPT NAME:  S01_VariableSetting
+COM  SCRIPT DESC:  Set variables for the project
+COM  CREATED DATE: 2/15/2021
+COM  CREATED BY:   Marion Pacuri
+COM  CALLED BY:    S00_Master_ALL
+COM  CALLS:        S01a_VendorVar
+COM                S01a_CoCdVar
+COM                S01c_FolderSetup
+COM                S02_Parameters
+COM ***********************************************************
+
+COM SAP Direct Link version
+v_version = "7.0"
+
+COM ACL Server userid for NA SAP retrieves
+v_UserID2 = "LDACL01"
+
+COM ***********************************************************
+COM Format user input parameters
+COM ***********************************************************
+SET DATE 'YYYYMMDD'
+SET DELETE_FILE ON
+
+COM Set high and low dates based on the date range scope of the audit
+v_dateLowFormat  = SUB(DATE(v_dateLow),1,8)
+v_dateHighFormat = SUB(DATE(v_dateHigh),1,8)
+
+COM Create date filters for EDW import
+v_dateLow_SRM  = ALL(DATE(v_dateLow, "YYYY-MM-DD"))
+v_dateHigh_SRM = ALL(DATE(v_dateHigh,"YYYY-MM-DD"))
+
+COM Create date filters for shopping EDW import
+v_dateLow_SC  = ALL(DATE(v_dateLow - 30, "YYYY-MM-DD"))
+v_dateHigh_SC = ALL(DATE(v_dateHigh + 30,"YYYY-MM-DD"))
+
+COM Set high and low year based on the date range scope of the audit
+v_Year_Low = STRING(YEAR(v_dateLow),4)
+v_Year_High = STRING(YEAR(v_dateHigh),4)
+
+COM Set base date
+IF NOT ISDEFINED("v_basedate") v_basedate = v_dateHigh
+
+COM SET FILTER FOR PLANT
+IF NOT ISDEFINED("v_Plant") v_Plant = ""
+
+v_PlantFilter = "<w><f>WERKS</f><o>0</o><l>%v_Plant%</l><h></h></w>" IF v_Plant <> ""
+v_PlantFilter = "" IF v_Plant = ""
+
+COM SET FILTER FOR VENDOR
+IF NOT ISDEFINED("v_Vendor") v_Vendor = ""
+IF v_Vendor <> "" DO S01a_VendorVar
+
+v_VendorFilter = "%v_VendorSAP%" IF v_Vendor <> ""
+v_VendorFilter = "" IF v_Vendor = ""
+
+v_VendorFilter2 = "%v_VendorSAP2%" IF v_Vendor <> ""
+v_VendorFilter2 = "" IF v_Vendor = ""
+
+v_VendorFilerSRM = "%v_VendorSRM%" IF v_Vendor <> ""
+v_VendorFilerSRM = "" IF v_Vendor = ""
+
+COM SET FILTER FOR COMPANY CODE
+IF NOT ISDEFINED("v_CoCd") v_CoCd = ""
+DO S01a_CoCdVar
+
+v_CoCdSAP    = ""               IF v_CoCd = "'*'"
+v_CoCdLFM1   = ""               IF v_CoCd = "'*'"
+v_CoCdPROJ   = ""               IF v_CoCd = "'*'"
+v_CoCdCDPOS  = ""               IF v_CoCd = "'*'"
+v_CoCdFolder = "ALL"            IF v_CoCd = "'*'" 
+v_CoCdSRM    = "CO_CD <> ''"    IF v_CoCd = "'*'"
+
+COM SET FILTER FOR PROJECT CODE
+IF NOT ISDEFINED("v_project_code") v_project_code = ""
+
+v_project_code_TEMP = UPPER(ALLTRIM(EXCLUDE(v_project_code " ().,-&?:;/\"))) IF v_project_code <> ""
+
+v_find_field = "UPPER(ALLTRIM(EXCLUDE(PROJ_PSPID ' ().,-&?:;/\')))" IF v_Region <> "EMEA"
+v_find_field = "UPPER(ALLTRIM(EXCLUDE(IMPR_POSID ' ().,-&?:;/\')))" IF v_Region = "EMEA"
+
+v_project_code_FILTER = "AND FIND('%v_project_code_TEMP%',%v_find_field%)" IF v_project_code <> ""
+v_project_code_FILTER = "" IF v_project_code = ""
+
+COM ***********************************************************
+COM Run SAP variables for region to be processed
+COM ***********************************************************
+
+COM Path to secure server folder containing SAP credentials 
+v_CRED_PATH = "\acl\robots\Aclscript_Files"
+
+SET ECHO NONE
+
+COM Run external scripts to set SAP credentials for the region selected
+DO "%v_CRED_PATH%\S02_AP_Batch.aclscript" IF v_Region = "AP"
+DO "%v_CRED_PATH%\S02_EMEA_Batch.aclscript" IF v_Region = "EMEA"
+DO "%v_CRED_PATH%\S02_LA_Batch.aclscript" IF v_Region = "LA"
+DO "%v_CRED_PATH%\S02_NA_Batch.aclscript" IF v_Region = "NA"
+DO "%v_CRED_PATH%\S00a_Chem_Batch.aclscript" IF v_Region = "CHEM"
+
+COM Run external script to set EDW credentials for SRM data
+DO "%v_CRED_PATH%\S01a_EDW_SRM_Cred.aclscript" 
+
+COM Create SQL source var for snowflake import
+v_SQL_source = 'SOURCE(password={encrypted-dp{AQAAANCMnd8BFdERjHoAwE/Cl+sBAAAAEqJQ4a5fLk65somb7uwlegQAAAACAAAAAAADZgAAwAAAABAAAADFyLlh1JUQLz1w1buenjvVAAAAAASAAACgAAAAEAAAAGneV2JW4bzP5kQDLKWq5RcgAAAAfi+BgQMkhMGnYDTnjS3BaE/IJ1Lvs1oEuEuudsz7pcMUAAAAEy539S4QHSKEDX03MaQ9ezS7jDw=}}};url=https://goodyear-edc.privatelink.snowflakecomputing.com;user=LD660H2;_persist_sessiondatabase=PROD)'
+
+SET ECHO ON
+
+COM ***********************************************************
+COM Set-up Excel output environment
+COM ***********************************************************
+
+COM Path to call Excel format macro 
+v_MACRO_PATH = "\acl\robots\Templates"
+
+COM Powershell script
+v_PS_script = "Format-Quarterly-PO-Global.ps1"
+
+COM Create task number variable
+CLOSE
+DELETE TASK.FIL OK
+DIRECTORY "" TO TASK.FIL
+OPEN TASK
+LOCATE RECORD 1
+v_task_num = EXCLUDE(ALL(SPLIT(FILE_NAME,"\",7)),"Task")
+
+COM Path to input and output
+v_EXPORT_PATH = "\Selfservice_Output\PO_Global_Quarterly\Output"
+
+COM
+COM Sets up folder structure of the robot output
+DO S01c_FolderSetup IF v_paramnum = 0
+
+COM Create Excel file containing user input parameters for macros
+DO S02_Parameters

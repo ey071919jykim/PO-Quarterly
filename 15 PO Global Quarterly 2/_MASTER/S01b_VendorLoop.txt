@@ -1,0 +1,27 @@
+COM *****************************************************
+COM  SCRIPT NAME:  S01b_VendorLoop
+COM  SCRIPT DESC:  Performs loop to create vendor variable
+COM  CREATED DATE: 3/31/2021
+COM  CREATED BY:   Marion Pacuri
+COM  CALLED BY:    S01a_VendorVar
+COM *****************************************************
+
+CLOSE PRIMARY SECONDARY
+
+COM Get Nth Record 
+OPEN T_Vendor_Summ
+LOCATE RECORD v_Count
+
+ASSIGN v_LIFNR = ALL(Vendor_Code)
+ASSIGN %v_VendorNo% = %v_VendorNo% + "<w><f>%v_Field%</f><o>0</o><l>" + "%v_LIFNR%" + "</l><h></h></w>"
+
+COM Create varialbe for SAP Vendor Changes Import (wildcard)
+ASSIGN %v_VendorNo2% = %v_VendorNo2% + "<w><f>%v_Field2%</f><o>7</o><l>" + "*%v_LIFNR%*" + "</l><h></h></w>"
+
+COM Create varialbe for SRM Import
+ASSIGN %v_VendorNo3% = %v_VendorNo3% + "AND (VEND_BUS_PARTNER_ID = '" + "%v_LIFNR%" + "' OR " IF v_Count = 1
+ASSIGN %v_VendorNo3% = %v_VendorNo3% + "VEND_BUS_PARTNER_ID = '" + "%v_LIFNR%" + "' OR " IF v_Count < v_Counter AND v_Count <> 1
+ASSIGN %v_VendorNo3% = %v_VendorNo3% + "VEND_BUS_PARTNER_ID = '" + "%v_LIFNR%" + "')"     IF v_Count = v_Counter
+
+COM Increment v_Count by 1 for the next loop
+ASSIGN v_Count = v_Count + 1

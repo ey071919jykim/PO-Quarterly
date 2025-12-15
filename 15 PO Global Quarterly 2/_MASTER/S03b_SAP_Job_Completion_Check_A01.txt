@@ -1,0 +1,74 @@
+COM ****************************************************************************
+COM  SCRIPT NAME:  S03b_SAP_Job_Completion_Check_A01
+COM  SCRIPT DESC:  Imports the job status table from SAP and checks if all 
+COM                background jobs are completed.
+COM  CREATED DATE: 1/27/2021
+COM  CREATED BY:   Marion Pacuri
+COM  CALLED BY:    S03a_SAP_Job_Completion_Check
+COM  CALLS:        n/a
+COM ****************************************************************************
+
+COMMENT *** Pause for N seconds, then resume script. Ctrl+C lets the user bypass the wait and resume the script.
+DISP TIME()
+EXECUTE 'TIMEOUT /t %v_seconds% /nobreak'
+DISP TIME()
+
+
+COMMENT
+********************************************************************************
+Import job status table from SAP
+********************************************************************************
+END
+
+COMMENT *** Import the TBTCO table, which contains job status codes, for the dates provided in the date filter (v_start_TBTCO and v_end_TBTCO). 
+IMPORT SAP PASSWORD 1 TO T_Job_Status SAP SOURCE "SAP AGENT" <q version="%v_version%"><s>0</s><d>%v_SAP_source%</d><u>%v_UserID%</u><c>%v_SAP_client%</c><lg>EN</lg><cf>T_Job_Status.fil</cf><sf>%v_SAP_sf%</sf><jcount></jcount><jname>DL_%v_UserID%161555.DAT</jname><dl>712</dl><m>1</m><ws>0</ws><jw>0</jw><r>500</r><ar>1</ar><e>500</e><ts><t><n>TBTCO</n><a>T00001</a><td>Job Status Overview Table</td><tt>1</tt><fs><f>JOBNAME</f><f>STATUS</f><f>JOBCOUNT</f><f>SDLUNAME</f><f>STRTDATE</f><f>STRTTIME</f><f>ENDDATE</f><f>ENDTIME</f></fs><wc>%v_date_filter%<w><f>SDLUNAME</f><o>0</o><l>%v_UserID%</l><h></h></w><w><f>SDLUNAME</f><o>0</o><l>%v_UserID2%</l><h></h></w></wc></t></ts><js></js></q>
+
+COMMENT *** Pause for N seconds, then resume script. Ctrl+C lets the user bypass the wait and resume the script.
+DISP TIME()
+EXECUTE 'TIMEOUT /t 10 /nobreak'
+DISP TIME()
+
+COMMENT *** Define computed field with more meaningful status codes
+OPEN T_Job_Status
+DEFINE FIELD STATUS_LONG COMPUTED 
+
+ SUBSTR('Running' 1 20)       IF ALLTRIM(UPPER(TBTCO_STATUS)) = 'R'
+ SUBSTR('Ready' 1 20)         IF ALLTRIM(UPPER(TBTCO_STATUS)) = 'Y'
+ SUBSTR('Scheduled' 1 20)     IF ALLTRIM(UPPER(TBTCO_STATUS)) = 'P'
+ SUBSTR('Intercepted' 1 20)   IF ALLTRIM(UPPER(TBTCO_STATUS)) = 'BTC_SCHEDULED'
+ SUBSTR('Released' 1 20)      IF ALLTRIM(UPPER(TBTCO_STATUS)) = 'S'
+ SUBSTR('Aborted' 1 20)       IF ALLTRIM(UPPER(TBTCO_STATUS)) = 'A'
+ SUBSTR('Finished' 1 20)      IF ALLTRIM(UPPER(TBTCO_STATUS)) = 'F'
+ SUBSTR('Put_Active' 1 20)    IF ALLTRIM(UPPER(TBTCO_STATUS)) = 'Z'
+ SUBSTR('Unknown_State' 1 20) IF ALLTRIM(UPPER(TBTCO_STATUS)) = 'X'
+ SUBSTR('ACL_Not_Identified' 1 20)
+
+COMMENT *** Sort in descending order on table name and date 
+OPEN T_Job_Status
+SORT ON TBTCO_STRTDATE D TBTCO_STRTTIME D TO T_Sorted_Jobs 
+
+COMMENT *** Create a record number field for joining with T_Sorted_Jobs2
+OPEN T_Sorted_Jobs
+DEFINE FIELD RecNo COMPUTED RECNO()
+
+COMMENT *** Extract to hardcode the record number, carrying forward only the first N (matching the count of imports found in T_Import_List). 
+OPEN T_Sorted_Jobs
+EXTRACT FIELDS ALL TO T_Sorted_Jobs2 FIRST %v_table_count% + %v_iterations%
+
+COMMENT *** Summarize the T_Sorted_Jobs table to get the statuses of the jobs. 
+OPEN T_Sorted_Jobs2
+SUMMARIZE ON TBTCO_STATUS OTHER ALL TO T_Status_Sum1 OPEN
+
+COMMENT *** Summarize the T_Sorted_Jobs table to get one record per job status with a total count. 
+SUMMARIZE ON TBTCO_STATUS SUBTOTAL COUNT as 'JOB_COUNT' OTHER ALL TO T_Status_Sum2 PRESORT OPEN
+
+COMMENT *** Sort so that the first record is R = Running, if present.
+SORT ON TBTCO_STATUS D TO T_Status_Summary
+
+COMMENT *** Check if all tables have finished downloading. If so, exit the loop by increasing v_max_iterations above its maximum value. If not, iterations continue until the last allowed iteration. 
+OPEN T_Status_Summary
+IF %WRITE1% = 1 AND TBTCO_STATUS = 'F' ASSIGN v_iterations = v_max_iterations + 1
+IF %WRITE1% >= 2 AND TBTCO_STATUS = 'R' AND JOB_COUNT = 1 ASSIGN v_iterations = v_max_iterations + 1
+IF %WRITE1% >= 1 AND TBTCO_STATUS = 'R' AND JOB_COUNT > 1 ASSIGN v_iterations = v_iterations + 1
+
+COMMENT *** End of script

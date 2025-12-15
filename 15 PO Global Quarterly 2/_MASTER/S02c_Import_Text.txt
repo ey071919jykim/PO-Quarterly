@@ -1,0 +1,49 @@
+COM ***********************************************************
+COM  SCRIPT NAME:  S02c_Import_Text1
+COM  SCRIPT DESC:  Import tesxt description tables from SAP via ACL Direct Link
+COM  CREATED DATE: 11/8/2021
+COM  CREATED BY:   Marion Pacuri
+COM  CALLED BY:    S02_Import_ALL
+COM  CALLS:        S03_SAP_Retrieve
+COM ***********************************************************
+
+COM Set folder
+SET FOLDER /Tables/Source
+
+COM Import the Currency Table 1
+IMPORT SAP PASSWORD 1 TO S_TCURR SAP SOURCE "SAP AGENT" <q version="%v_version%"><s>0</s><d>%v_SAP_source% </d><u>%v_userID%</u><c>%v_SAP_client%</c><lg>EN</lg><cf>S_TCURR.fil</cf><sf>%v_SAP_sf%</sf><jcount>14421500</jcount><jname>DL_%v_userID%144215.DAT</jname><dl>60  </dl><m>1</m><r>500</r><ar>1</ar><e>500</e><ts><t><n>TCURR</n><a>T00001</a><td>Exchange Rates</td><fs><f>KURST</f><f>FCURR</f><f>TCURR</f><f>GDATU</f><f>UKURS</f><f>FFACT</f><f>TFACT</f></fs><wc><w><f>KURST</f><o>0</o><l>M</l><h></h></w><w><f>TCURR</f><o>0</o><l>USD</l><h></h></w></wc></t></ts><js></js></q>
+
+COM Import the Currency Table 2
+IMPORT SAP PASSWORD 1 TO S_TCURF SAP SOURCE "SAP AGENT" <q version="%v_version%"><s>0</s><d>%v_SAP_source% </d><u>%v_userID%</u><c>%v_SAP_client%</c><lg>EN</lg><cf>S_TCURF.fil</cf><sf>%v_SAP_sf%</sf><jcount>14444900</jcount><jname>DL_AC12296144449.DAT</jname><dl>60  </dl><m>1</m><r>500</r><ar>1</ar><e>500</e><ts><t><n>TCURF</n><a>T00001</a><td>Conversion Factors</td><fs><f>KURST</f><f>FCURR</f><f>TCURR</f><f>GDATU</f><f>FFACT</f><f>TFACT</f><f>ABWCT</f><f>ABWGA</f></fs><wc><w><f>KURST</f><o>0</o><l>M</l><h></h></w></wc></t></ts><js></js></q>
+
+COM Import Company Code Names
+IMPORT SAP PASSWORD 1 TO S_T001 SAP SOURCE "SAP AGENT" <q version="%v_version%"><s>0</s><d>%v_SAP_source% </d><u>%v_userID%</u><c>%v_SAP_client%</c><lg>EN</lg><cf>S_T001.fil</cf><sf>%v_SAP_sf%</sf><jcount>14565600</jcount><jname>DL_AC12296145655.DAT</jname><dl>31  </dl><m>1</m><sn></sn><sg></sg><ws>0</ws><jw>0</jw><r>500</r><ar>1</ar><e>500</e><ts><t><n>T001</n><a>T00001</a><td>Company Codes</td><tt>1</tt><fs><f>BUKRS</f><f>BUTXT</f></fs><wc></wc></t></ts><js></js></q>
+
+COM Import Plant Names
+IMPORT SAP PASSWORD 1 TO S_T001W SAP SOURCE "SAP AGENT" <q version="%v_version%"><s>0</s><d>%v_SAP_source%</d><u>%v_userID%</u><c>%v_SAP_client%</c><lg>EN</lg><cf>S_T001W.fil</cf><sf>%v_SAP_sf%</sf><jcount>10450100</jcount><jname>DL_AC15955104459.DAT</jname><dl>36  </dl><m>1</m><sn></sn><sg></sg><ws>0</ws><jw>0</jw><r>500</r><ar>1</ar><e>500</e><ts><t><n>T001W</n><a>T00001</a><td>Plants/Branches</td><tt>1</tt><fs><f>WERKS</f><f>NAME1</f></fs><wc></wc></t></ts><js></js></q>
+
+COM Import T077Y Account Group Names (Table T077K)
+IMPORT SAP PASSWORD 1 TO S_T077Y SAP SOURCE "SAP AGENT" <q version="%v_version%"><s>0</s><d>%v_SAP_source% </d><u>%v_userID%</u><c>%v_SAP_client%</c><lg>EN</lg><cf>S_T077Y.fil</cf><sf>%v_SAP_sf%</sf><jcount>19261200</jcount><jname>DL_%v_UserID%192612.DAT</jname><dl>36  </dl><m>1</m><r>500</r><ar>1</ar><e>500</e><ts><t><n>T077Y</n><a>T00068</a><td>Account Group Names (Table T077K)</td><fs><f>KTOKK</f><f>TXT30</f></fs><wc><w><f>SPRAS</f><o>0</o><l>E</l><h></h></w></wc></t></ts><js></js></q>
+
+COM Import T161T Texts for Purchasing Document Types
+IMPORT SAP PASSWORD 1 TO S_T161T SAP SOURCE "SAP AGENT" <q version="%v_version%"><s>0</s><d>%v_SAP_source% </d><u>%v_userID%</u><c>%v_SAP_client%</c><lg>EN</lg><cf>S_T161T.fil</cf><sf>%v_SAP_sf%</sf><jcount>13174000</jcount><jname>DL_%v_UserID%131740.DAT</jname><dl>26  </dl><m>1</m><r>500</r><ar>1</ar><e>500</e><ts><t><n>T161T</n><a>T00009</a><td>Texts for Purchasing Document Types</td><fs><f>BSART</f><f>BATXT</f><f>BSTYP</f></fs><wc><w><f>SPRAS</f><o>0</o><l>E</l><h></h></w></wc></t></ts><js></js></q>
+
+COM Import DD07T_ESTAK Status of purchasing document
+IMPORT SAP PASSWORD 1 TO S_DD07T_ESTAK SAP SOURCE "SAP AGENT" <q version="%v_version%"><s>0</s><d>%v_SAP_source%</d><u>%v_userID%</u><c>%v_SAP_client%</c><lg>EN</lg><cf>S_DD07T_ESTAK.fil</cf><sf>%v_SAP_sf%</sf><jcount>18290600</jcount><jname>DL_%v_UserID%182906.DAT</jname><dl>102 </dl><m>1</m><r>500</r><ar>1</ar><e>500</e><ts><t><n>DD07T</n><a>T00062</a><td>DD: Texts for Domain Fixed Values (Language-Dependent)</td><fs><f>DOMNAME</f><f>DDTEXT</f><f>DOMVALUE_L</f></fs><wc><w><f>DDLANGUAGE</f><o>0</o><l>E</l><h></h></w><w><f>DOMNAME</f><o>0</o><l>ESTAK</l><h></h></w></wc></t></ts><js></js></q>
+
+COM Import Texts for Item Categories
+IMPORT SAP PASSWORD 1 TO S_T163Y SAP SOURCE "SAP AGENT" <q version="%v_version%"><s>0</s><d>%v_SAP_source%</d><u>%v_userID%</u><c>%v_SAP_client%</c><lg>EN</lg><cf>S_T163Y.fil</cf><sf>%v_SAP_sf%</sf><jcount>12552600</jcount><jname>DL_%v_UserID%125526.DAT</jname><dl>24  </dl><m>1</m><sn></sn><sg></sg><ws>0</ws><jw>0</jw><r>500</r><ar>1</ar><e>500</e><ts><t><n>T163Y</n><a>T00002</a><td>Texts for Item Categories</td><tt>1</tt><fs><f>PSTYP</f><f>PTEXT</f><f>EPSTP</f></fs><wc><w><f>SPRAS</f><o>0</o><l>E</l><h></h></w></wc></t></ts><js></js></q>
+
+COM Import T052U Own Explanations for Terms of Payment
+IMPORT SAP PASSWORD 1 TO S_T052U SAP SOURCE "SAP AGENT" <q version="%v_version%"><s>0</s><d>%v_SAP_source% </d><u>%v_userID%</u><c>%v_SAP_client%</c><lg>EN</lg><cf>S_T052U.fil</cf><sf>%v_SAP_sf%</sf><jcount>13581400</jcount><jname>DL_%v_UserID%135813.DAT</jname><dl>60  </dl><m>1</m><r>500</r><ar>1</ar><e>500</e><ts><t><n>T052U</n><a>T00026</a><td>Own Explanations for Terms of Payment</td><fs><f>SPRAS</f><f>ZTERM</f><f>ZTAGG</f><f>TEXT1</f></fs><wc><w><f>SPRAS</f><o>0</o><l>E</l><h></h></w></wc></t></ts><js></js></q>
+
+COM IMPORT T023T: Material Group Descriptions
+IMPORT SAP PASSWORD 1 TO S_T023T SAP SOURCE "SAP AGENT" <q version="%v_version%"><s>0</s><d>%v_SAP_source% </d><u>%v_UserID%</u><c>%v_SAP_client%</c><lg>EN</lg><cf>S_T023T.fil</cf><sf>%v_SAP_sf%</sf><jcount>13590300</jcount><jname>DL_LD660H2135903.DAT  </jname><dl>91  </dl><m>1</m><r>500</r><ar>1</ar><e>500</e><ts><t><n>T023T</n><a>T00052</a><td>Material Group Descriptions</td><fs><f>MATKL</f><f>WGBEZ</f><f>WGBEZ60</f></fs><wc><w><f>SPRAS</f><o>0</o><l>E</l><h></h></w></wc></t></ts><js></js></q>
+
+COM Import excel for material group direct and indirect identifier
+IMPORT EXCEL TO S_DIRECT_INDIRECT "S_DIRECT_INDIRECT.fil" FROM "Mat_Group_Ind_Direct_Ver2.xlsx" TABLE "Mat Group$" KEEPTITLE FIELD "Mat_Group" C WID 9 AS "" FIELD "Mat_Desc" C WID 21 AS "" FIELD "Mat_Desc_2" C WID 60 AS "" FIELD "Direct_Indirect" C WID 8 AS ""
+
+COM Run SAP Background Check to retrieve tables
+DO S03_SAP_Retrieve
+
+CLOSE PRIMARY SECONDARY

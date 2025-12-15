@@ -1,0 +1,32 @@
+COM *****************************************************
+COM  SCRIPT NAME:  S03_SAP_Retrieve
+COM  SCRIPT DESC:  Set variables to check SAP for job query 
+COM                completion before running the Direct Link 
+COM                retrieve command
+COM  CREATED DATE: 1/27/2021
+COM  CREATED BY:   Marion Pacuri
+COM  CALLED BY:    S02_SAP_Imports
+COM                S02a_Import_Val
+COM                S02b_Import_Mast
+COM                S02c_Import_Ref
+COM  CALLS:        S03a_SAP_Job_Completion_Check
+COM *****************************************************
+
+COM *** Set system environment
+CLOSE PRIMARY SECONDARY
+DISPLAY VERSION
+SET DATE 'YYYYMMDD'
+
+COM Set folder
+SET FOLDER /Tables/Source
+
+COM *** Set up pause time and maximum number of iterations to try
+COM IF v_Region <> "NA" ASSIGN v_seconds = 600
+IF v_Region <> "NA" ASSIGN v_seconds = 30
+IF v_Region = "NA" ASSIGN v_seconds = 30
+v_max_iterations = 9999
+
+COM *** BELOW SCRIPT AND SUBSCRIPT WILL DO AUTOMATIC RETRIEVAL FROM SAP VIA SAP JOB STATUS TABLE
+DO SCRIPT S03a_SAP_Job_Completion_Check
+
+COM *** End of script
