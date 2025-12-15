@@ -1,0 +1,25 @@
+COM ***********************************************************
+COM  SCRIPT NAME:  A04b_Export
+COM  SCRIPT DESC:  Creates a loop to split records to 1 million per file
+COM  CREATED DATE: 5/17/2021
+COM  CREATED BY:   Marion Pacuri
+COM  CALLED BY:    A04a_Export
+COM  FILES IN:     R1_PODetails.FIL
+COM  FILE OUT:     PO1_PODetails_%v_Filename_Seq%.DEL
+COM ***********************************************************
+
+COM Initialize 'v_Filename_Seq' variable
+ASSIGN v_Filename_Seq =  "1"                    IF v_file_Counter = 1
+ASSIGN v_Filename_Seq =  STRING(v_File_Count,1) IF v_file_Counter <> 1
+
+COM 1.01 EXPORT TO EXCEL
+OPEN %v_filein%
+DELETE FIELD GY_ID OK
+EXPORT ALL FIELDS DELIMITED TO "%v_EXPORT_PATH%\%v_TestFolder%\%v_fileout%_%v_Filename_Seq%" UNICODE KEEPTITLE SEPARATOR "~" QUALIFIER NONE IF (BETWEEN(RECNO(),%v_recLow%,%v_recHigh%)) 
+
+COM Increment v_Count by 1 for the next loop
+ASSIGN v_File_Count = v_File_Count + 1
+ASSIGN v_recLow     = v_recLow     + INT(%v_maxRec%)
+ASSIGN v_recHigh    = v_recHigh    + INT(%v_maxRec%)
+
+SET EXACT OFF

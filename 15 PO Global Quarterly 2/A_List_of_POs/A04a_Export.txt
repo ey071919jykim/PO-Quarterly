@@ -1,0 +1,84 @@
+COM ***********************************************************
+COM  SCRIPT NAME:  A04a_Export
+COM  SCRIPT DESC:  Export final output to delimited files
+COM  CREATED DATE: 5/13/2021
+COM  CREATED BY:   Marion Pacuri
+COM  CALLED BY:    A00_Master
+COM  CALLS:        A04b_Export
+COM  FILES IN:     R1_PODetails.FIL
+COM                R2_POSummary.FIL
+COM  FILES OUT:    PO1_PODetails.DEL
+COM                PO2_POSummary.DEL
+COM ***********************************************************
+
+COM Set Date format
+SET DATE 'MM/DD/YYYY'
+
+COM Delete existing output files
+EXECUTE 'cmd /c del "%v_EXPORT_PATH%\%v_TestFolder%\*.DEL"'
+EXECUTE 'cmd /c del "%v_EXPORT_PATH%\%v_TestFolder%\*.xlsx"'
+
+COM COUNT NUMBER OF RECORDS TO EXPORT
+OPEN R1_PODetails
+EXTRACT ALL FIELDS TO R1_PODetails_SRM IF FIND("SRM",Document_Type)
+EXTRACT ALL FIELDS TO R1_PODetails_SAP IF NOT FIND("SRM",Document_Type)
+
+OPEN R1_PODetails_SRM
+COUNT
+
+COM Initialize Export variables
+ASSIGN v_maxRec       = 1000000.00
+ASSIGN v_File_Count   = 1
+ASSIGN v_file_Counter = 1                               IF COUNT1/%v_maxRec% <= 0
+ASSIGN v_file_Counter = INTEGER(COUNT1/%v_maxRec%) + 1  IF COUNT1/%v_maxRec% > 0
+ASSIGN v_recLow       = 1
+ASSIGN v_recHigh      = INT(%v_maxRec%)
+ASSIGN v_filein       = "R1_PODetails_SRM"
+ASSIGN v_fileout      = "PO1_PODetails_SRM"
+
+COM Export Results by increments of 1M per excel file
+DO A04b_Export WHILE v_File_Count <= v_file_Counter
+
+COM*******************************************************************************
+
+OPEN R1_PODetails_SAP
+COUNT
+
+COM Initialize Export variables
+ASSIGN v_maxRec       = 1000000.00
+ASSIGN v_File_Count   = 1
+ASSIGN v_file_Counter = 1                               IF COUNT1/%v_maxRec% <= 0
+ASSIGN v_file_Counter = INTEGER(COUNT1/%v_maxRec%) + 1  IF COUNT1/%v_maxRec% > 0
+ASSIGN v_recLow       = 1
+ASSIGN v_recHigh      = INT(%v_maxRec%)
+ASSIGN v_filein       = "R1_PODetails_SAP"
+ASSIGN v_fileout      = "PO1_PODetails_SAP"
+
+COM Export Results by increments of 1M per excel file
+DO A04b_Export WHILE v_File_Count <= v_file_Counter
+
+COM*******************************************************************************
+
+OPEN R2_POSummary
+EXPORT ALL FIELDS DELIMITED TO "%v_EXPORT_PATH%\%v_TestFolder%\PO2_POSummary" UNICODE KEEPTITLE SEPARATOR "~" QUALIFIER NONE
+
+COM*******************************************************************************
+
+OPEN SRC_INPUT_COCD
+EXPORT ALL FIELDS DELIMITED TO "%v_EXPORT_PATH%\%v_TestFolder%\PO3_Parameters" UNICODE KEEPTITLE SEPARATOR "~" QUALIFIER NONE
+
+COM Execute Powershell formatting script
+v_powershell_exec_path = "%v_EXPORT_PATH%\%v_TestFolder%"
+DO S05a_Execute_PS
+
+CLOSE PRIMARY SECONDARY
+SET LOG
+
+COM Move formatted xlsx to the output folder
+EXECUTE 'cmd /c COPY /Y "%v_EXPORT_PATH%\%v_TestFolder%\*.xlsb" "%v_EXPORT_PATH%\*.xlsb"'
+
+COM Delete existing test folder and its contents
+EXECUTE 'TIMEOUT /t 30 /nobreak'
+EXECUTE 'cmd /c RMDIR /Q/S "%v_EXPORT_PATH%\%v_TestFolder%"'
+
+EXECUTE 'cmd /c del "*.INX"'

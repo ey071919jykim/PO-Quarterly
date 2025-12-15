@@ -1,0 +1,30 @@
+COM ***********************************************************
+COM  SCRIPT NAME:  A00a_VarParameters
+COM  SCRIPT DESC:  Export user input parameters for Excel template 
+COM                macros.
+COM  CREATED DATE: 4/9/2021
+COM  CREATED BY:   Marion Pacuri
+COM  FILE IN:      R_PARAMETERS.FIL 
+COM  FILES OUT:    R_PARAMETERS_A.FIL 
+COM                DA02_Parameters.xlsx
+COM  CALLED BY:    A00_Master
+COM ***********************************************************
+
+COM Set folder
+v_TestFolder = "A_List_PO"
+
+COM Create subfolder to export Parameter file
+EXECUTE 'cmd /c MD "%v_EXPORT_PATH%\%v_TestFolder%\Parameters"'
+
+COM Create ACL log file in the subfolder
+SET SUPPRESSXML ON
+SET LOG TO "%v_EXPORT_PATH%\%v_TestFolder%\PO_Audit_SS.LOG"
+
+COM Export parameters to Excel
+DELETE "%v_EXPORT_PATH%\%v_TestFolder%\Parameters\DA02_Parameters.xlsx" OK
+
+OPEN R_PARAMETERS
+EXPORT ALL FIELDS XLSX TO "%v_EXPORT_PATH%\%v_TestFolder%\Parameters\DA02_Parameters.xlsx" WORKSHEET Param  
+
+CLOSE PRIM SEC 
+DISPLAY VARIABLES

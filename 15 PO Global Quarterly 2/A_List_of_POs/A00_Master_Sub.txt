@@ -1,0 +1,27 @@
+COM ***********************************************************
+COM  SCRIPT NAME:  A00_Master_Sub
+COM  SCRIPT DESC:  Creates loop per batch
+COM  CREATED DATE: 7/31/2023
+COM  CREATED BY:   Marion Pacuri
+COM  CALLED BY:    A00_Master
+COM ***********************************************************
+
+OPEN t_Batch
+LOCATE RECORD v_count_batch
+
+v_Region = ALL(Region)
+v_CoCd   = ALL(Company_Code)
+v_Plant  = ALL(Plant)
+v_Batch  = ALL(STRING(Batch,5))
+
+COM Import all tables
+DO S01_VariableSetting
+DO S02a_Import_Transactions
+
+DO S02b_Import_MasterData
+DO S02c_Import_Text
+
+COM Run list of POs
+DO A02_List_of_POs
+
+v_count_batch = v_count_batch + 1

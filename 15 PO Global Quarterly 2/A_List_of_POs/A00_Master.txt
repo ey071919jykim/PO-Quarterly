@@ -1,0 +1,66 @@
+COMMENT
+//ANALYTIC List_of_POs
+  This script will set the parameters to run the PO robot.
+//PARAM v_dateLow D Start Date
+//PARAM v_dateHigh D End Date
+//PARAM v_User_email C MULTI SEPARATOR , Email Address to send link to data analytic output reports 
+//RESULT FILE dev_rfc.trc
+//RESULT LOG
+//FILE *.xlsx
+END
+
+SET SAFETY OFF
+SET DELETE_FIL ON
+CLOSE PRIM SECON
+
+COM ***********************************************************
+COM  SCRIPT NAME:  A00_Master
+COM  SCRIPT DESC:  Run all scripts for List of POs
+COM  CREATED DATE: 7/31/2023
+COM  CREATED BY:   Marion Pacuri
+COM  CALLS:        A00_Master_Sub
+COM ***********************************************************
+
+SET FOLDER /Tables/Source
+
+COM Import input file (region, company code, plant)
+v_INPUT_PATH  = "\Selfservice_Output\PO_Global_Quarterly\Input"
+
+IMPORT EXCEL TO SRC_INPUT_COCD "SRC_INPUT_COCD.fil" FROM "%v_INPUT_PATH%\INPUT_COCD.xlsx" TABLE "Sheet1$" KEEPTITLE FIELD "Region" C WID 4 AS "" FIELD "Company_Code" C WID 28 AS "" FIELD "Plant" C WID 4 AS ""
+
+OPEN SRC_INPUT_COCD
+
+v_reg = ALL(Region)
+v_batch = 0
+
+COM Create batch numbers
+GROUP IF v_reg = ALL(Region)
+    v_batch = v_batch + 1   
+    EXTRACT ALL FIELDS v_batch AS "Batch" TO t_Batch
+    ELSE 
+    v_reg = ALL(Region)
+    v_batch = 1
+    EXTRACT ALL FIELDS v_batch AS "Batch" TO t_Batch
+END
+
+COM Loop procedure per batch
+OPEN t_Batch    
+COUNT
+
+v_count_batch = 1
+v_counter_batch = COUNT1
+
+DO A00_Master_Sub WHILE v_count_batch <= v_counter_batch
+
+COM Append all PO details across regions and create summary
+DO A00a_VarParameters
+DO A03_PO_Summary
+
+COM Export to delimited files
+DO A04a_Export
+
+COM Notify users
+DO S04_Notify
+
+CLOSE PRIM SECON 
+SET DELETE_FIL OFF
